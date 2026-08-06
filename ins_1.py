@@ -1,46 +1,68 @@
-# Replicate database SQL structure
+from abc import abstractmethod
 
-student_records = {
-    1: {
-        "name": "Amara",
-        "favorite_subjects": ["Geometry", "Math", "Science"],
-        "grades": [92, 88, 95]
-    },
-    2: {
-        "name": "Leo",
-        "favorite_subjects": ["PE", "Geology", "AI"],
-        "grades": [70, 65, 80]
-    },
-}
+class Student: # Student entity representing a Student
+    def __init__(self, student_name: str, fav_subjects: list[str], grades: list[int]):
+        self.name = student_name
+        self.fav_subjects = fav_subjects
+        self.grades = [grade for grade in grades if 60 <= grade <= 100]
 
-# Used type hints to show required data type for function parameters
+class ProductRepository:
+    @abstractmethod
+    def add_student(self, student: Student):
+        pass
 
-def add_students(name: str, favorite_subjects: list[str], grades: list[float]):
-    student_records[len(student_records) + 1] = {
-        "name": name,
-        "favorite_subjects": favorite_subjects,
-        "grades": grades,
-    }
+    @abstractmethod
+    def get_student_by_name(self, student_name: str):
+        pass
 
-add_students("John", ["Physics", "History", "PE"], [98, 77, 88])
-add_students("Jacob", ["Foodtech", "ML", "Java"], [91, 98, 67])
+    @abstractmethod
+    def update_student(self, student: Student):
+        pass
 
-def print_formatted_student_records():
-    for student_id, data in student_records.items():
-        subjects = ", ".join(data["favorite_subjects"])
-        grades = ", ".join(map(str, data["grades"]))
-        
-        print(f"Name: {data['name']}\nSubjects: {subjects}\nGrades: {grades}\n") # Used F-string to make it easier
-        
-print_formatted_student_records()
+    @abstractmethod
+    def delete_student(self, student_name: str):
+        pass
 
-def filter_averages(threshold_value: int, dictionary: dict):
-    filtered_student_records = {
-        data["name"]: sum(data["grades"]) / len(data["grades"])
-        for student_id, data in student_records.items()
-        if sum(data["grades"]) / len(data["grades"]) >= threshold_value
-    }
+class DictionaryStudentRepository:
+    def __init__(self):
+        self.roster = {
+            "Amara": [92, 88, 95],
+            "Leo": [70, 65, 80]
+        }
 
-    return filtered_student_records # why cant i assign variable in return statement bruh
+    def add_student(self, student: Student):
+        self.roster[student.name] = { 
+            "fav_subjects": student.fav_subjects, 
+            "grades": student.grades 
+        }
 
-print(filter_averages(80, student_records))
+    def get_student_by_name(self, student_name: str) -> str:
+            return (student_name, self.roster[student_name]) if student_name in self.roster else "Student Not Found" 
+
+    def update_student(self, student: Student):
+        if student.name in self.roster:
+            self.roster.get(student.name).update({
+                "fav_subjects": student.fav_subjects, 
+                "grades": student.grades 
+            })
+
+    def delete_student(self, student_name: str):
+        self.roster.pop(student_name)
+
+def main():
+    student_repository = DictionaryStudentRepository()
+
+    student_repository.add_student(Student("John", ["PE", "Math", "Geometry"], [90, 87, 99]))
+
+    print(student_repository.get_student_by_name("John"))
+
+    student_repository.update_student(Student("John", ["Biology", "Science", "IRS"], [78, 67, 79]))
+
+    print(student_repository.get_student_by_name("John"))
+
+    student_repository.delete_student("John")
+
+    print(student_repository.get_student_by_name("John"))
+
+if __name__ == "__main__": # if script is run directly, execute main()
+    main()
